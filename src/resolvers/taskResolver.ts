@@ -1,49 +1,69 @@
-import { Resolver, Mutation, Arg, Query } from 'type-graphql';
-import { Task, TaskModel, statusEnum } from '../entities/Task';
-import { TaskInput } from './types/taskInput';
+import { gql } from 'apollo-server-lambda';
+import { TaskModel, statusEnum } from '../entities/Task';
 
-@Resolver()
-export class TaskResolver {
-
-  @Query(_returns => Task, { nullable: false})
-  async Task(@Arg('id') id: string){
-
-    return await TaskModel.findById({_id:id});
+export const typeDefs = gql`
+  type Mutation {
+    createTask(data: TaskInput!): Task!
+    deleteTask(id: String!): Boolean!
+    updateTaskStatus(id: String!): Task!
   }
 
-
-  @Query(() => [Task])
-  async Tasks(){
-
-    return await TaskModel.find();
+  type Query {
+    Task(id: String!): Task!
+    Tasks: [Task!]!
   }
 
-  @Mutation(() => Task)
-  async createTask(@Arg('data'){ name, status }: TaskInput): Promise<Task> {
-    const task = (await TaskModel.create({
-      name,
-      status
-    })).save();
-
-    return task;
+  enum statusEnum {
+    Done
+    ToDo
   }
 
-
-  @Mutation(() => Boolean)
-  async deleteTask(@Arg('id') id: string) {
-    await TaskModel.deleteOne({ _id: id });
-
-    return true;
+  type Task {
+    id: ID!
+    name: String!
+    status: String!
   }
 
-  @Mutation(() => Task)
-  async updateTaskStatus(@Arg('id') id: string): Promise<Task> {
-    const task = await TaskModel.findByIdAndUpdate(
-      id,
-      { $set: { status: statusEnum.Done } }
-    );
-
-    return task;
+  input TaskInput {
+    name: String!
+    status: String!
   }
+`;
 
+interface IInputData {
+  name: string;
+  status: string;
 }
+
+export const resolvers = {
+  Mutation: {
+    createTask: async(parent: any, args: {data: IInputData }, context: any, info: any) => {
+      const task = (await TaskModel.create({
+        name: args.data.name,
+        status: statusEnum[args.data.status],
+      })).save();
+
+      return task;
+    },
+    deleteTask: async(parent: any, args: { id: any; }, context: any, info: any) => {
+      await TaskModel.deleteOne({ _id: args.id });
+
+      return true;
+    },
+    updateTaskStatus: async(parent: any, args: { id: string; }, context: any, info: any) => {
+      const task = await TaskModel.findByIdAndUpdate(
+        args.id,
+        { $set: { status: statusEnum.Done } }
+      );
+
+      return task;
+    }
+  },
+  Query: {
+    Tasks: async() => (await TaskModel.find()),
+    Task: async(parent: any, args: { id: any; }, context: any, info: any) => {
+      return await TaskModel.findById({ _id: args.id });
+    },
+  }
+};
+

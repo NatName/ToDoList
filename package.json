@@ -5,21 +5,17 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/app.js",
-    "dev": "ts-node-dev src/app.ts"
+    "start": "node dist/index.js",
+    "dev": "ts-node-dev src/index.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@typegoose/typegoose": "^7.3.2",
-    "apollo-server-express": "^2.16.1",
+    "apollo-server": "^2.16.1",
     "apollo-server-lambda": "^2.16.1",
-    "class-validator": "^0.12.2",
-    "express": "^4.17.1",
-    "graphql": "^15.3.0",
     "mongoose": "^5.10.0",
-    "reflect-metadata": "^0.1.13",
     "type-graphql": "^1.0.0"
   },
   "devDependencies": {
